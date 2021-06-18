@@ -75,4 +75,3 @@ class admin_setting_html extends admin_setting {
         return $OUTPUT->render_from_template('mod_hvp/content_hub_registration_box', $this->hubinfo);
     }
 }
-
