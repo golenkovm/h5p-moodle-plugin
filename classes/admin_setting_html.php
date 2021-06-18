@@ -70,7 +70,8 @@ class admin_setting_html extends admin_setting {
         if ($this->hubinfo === false) {
           $this->hubinfo = (object) [];
         }
-        $this->hubinfo->registrationurl = $registrationurl->out(false);
+        $this->hubinfo->register = get_string('contenthub:register', 'hvp', $registrationurl->out(false));
+        $this->hubinfo->changesettings = get_string('contenthub:changesettings', 'hvp', $registrationurl->out(false));
         return $OUTPUT->render_from_template('mod_hvp/content_hub_registration_box', $this->hubinfo);
     }
 }
