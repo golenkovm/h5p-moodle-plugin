@@ -66,7 +66,7 @@ class framework implements \H5PFrameworkInterface {
 
             $context = \context_system::instance();
             $root = view_assets::getsiteroot();
-            $url = "{$root}/pluginfile.php/{$context->id}/mod_hvp";
+            $url = "{$root}/mod/hvp/proxy_pluginfile.php/{$context->id}/mod_hvp";
 
             $language = self::get_language();
 
