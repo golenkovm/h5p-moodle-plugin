@@ -25,7 +25,7 @@
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
-require_login();
+\core\session\manager::write_close();
 
 $relativepath = get_file_argument();
 
@@ -35,47 +35,42 @@ if (empty($relativepath)) {
 
 // This should target the custom content types. We also filter out the
 // Content-Length Header in this case to avoid truncation.
-$jstobereplaced = stripos($relativepath, 'cachedassets') !== false;
+$jstobereplaced = stripos($relativepath, 'cachedassets') !== false && stripos($relativepath, '.js') !== false;
+$url = new moodle_url('/pluginfile.php/'.ltrim($relativepath, '/'));
+if (!$jstobereplaced) {
+    header("Location: $url");
+    die; // This will never be reached!
+} else {
+    header('Content-Type: application/javascript');
+}
 
 $curl = new curl();
 
-if (!empty($_SERVER['HTTP_RANGE'])) {
-    $curl->setHeader("Range: {$_SERVER['HTTP_RANGE']}");
+// Add user cookies to the request, to ensure they are processed properly.
+$cookiestr = [];
+foreach ($_COOKIE as $key => $value) {
+    $cookiestr[] = $key.'='.$value;
 }
+$cookiestr = implode('; ', $cookiestr) . ';';
+$curl->setHeader('Cookie: '.$cookiestr);
 
 $curl->setopt([
-    'CURLOPT_ENCODING'       => 'identity',
-    'CURLOPT_CERTINFO'       => 1,
-    'CURLOPT_SSL_VERIFYPEER' => true,
-    'CURLOPT_HEADERFUNCTION' => function ($curl, $header) use ($jstobereplaced) {
-        if (stripos($header, 'Set-Cookie') !== false) {
-            // Do not set the cookies when returning to the client.
-            return strlen($header);
-        }
-
-        if (!$jstobereplaced ||  stripos($header, 'content-length') === false) {
-            header($header);
-        }
-        return strlen($header);
-    },
-    'CURLOPT_WRITEFUNCTION'     => function ($curl, $body) use ($jstobereplaced, $relativepath) {
+    'CURLOPT_WRITEFUNCTION'  => function ($curl, $body) use ($jstobereplaced, $relativepath) {
         // Even if we modify the body, we need to return the original length.
         $originalbodylength = strlen($body);
 
-        if ($jstobereplaced) {
-            // Remove the transitionend event which occurs in the referenced
-            // link, to prevent card focusing on page load, as this might be
-            // included as embedded content, and a page scroll/focus does not
-            // make sense.
-            // https://github.com/h5p/h5p-dialogcards/blob/7a7580aad3424c60f45cb65eac52ff14bc83b540/src/scripts/h5p-dialogcards-card.js#L482-L484.
-            $body = str_replace('.one("transitionend",', '.off("_removed_",', $body);
-        }
-
+        // Remove the transitionend event which occurs in the referenced
+        // link, to prevent card focusing on page load, as this might be
+        // included as embedded content, and a page scroll/focus does not
+        // make sense.
+        // https://github.com/h5p/h5p-dialogcards/blob/7a7580aad3424c60f45cb65eac52ff14bc83b540/src/scripts/h5p-dialogcards-card.js#L482-L484.
+        $body = str_replace('.one("transitionend",', '.off("_removed_",', $body);
         echo $body;
 
         return $originalbodylength;
     },
 ]);
 
+// The proxy will pass content back from pluginfile.php
 $url = new moodle_url('/pluginfile.php/'.ltrim($relativepath, '/'));
-$curl->get($url);
+$curl->get($url->out());
