@@ -23,68 +23,75 @@ define(['jquery', 'mod_hvp/communicator'], function($, H5PEmbedCommunicator) {
 
             // Check for H5P instances.
             if (!H5P || !H5P.instances || !H5P.instances[0]) {
+                H5P.externalDispatcher.on('initialized', function() {
+                    setupEmbedCommunicator(iFrame, H5P);
+                });
                 return;
             }
-
-            var resizeDelay;
-            var instance = H5P.instances[0];
-            var parentIsFriendly = false;
-
-            // Handle that the resizer is loaded after the iframe.
-            H5PEmbedCommunicator.on('ready', function() {
-                H5PEmbedCommunicator.send('hello');
-            });
-
-            // Handle hello message from our parent window.
-            H5PEmbedCommunicator.on('hello', function() {
-                // Initial setup/handshake is done.
-                parentIsFriendly = true;
-
-                // Hide scrollbars for correct size.
-                iFrame.contentDocument.body.style.overflow = 'hidden';
-
-                document.body.classList.add('h5p-resizing');
-
-                // Content need to be resized to fit the new iframe size.
-                H5P.trigger(instance, 'resize');
-            });
-
-            // When resize has been prepared tell parent window to resize.
-            H5PEmbedCommunicator.on('resizePrepared', function() {
-                H5PEmbedCommunicator.send('resize', {
-                    scrollHeight: iFrame.contentDocument.body.scrollHeight
-                });
-            });
-
-            H5PEmbedCommunicator.on('resize', function() {
-                H5P.trigger(instance, 'resize');
-            });
-
-            H5P.on(instance, 'resize', function() {
-                if (H5P.isFullscreen) {
-                    return; // Skip iframe resize.
-                }
-
-                // Use a delay to make sure iframe is resized to the correct size.
-                clearTimeout(resizeDelay);
-                resizeDelay = setTimeout(function() {
-                    // Only resize if the iframe can be resized.
-                    if (parentIsFriendly) {
-                        H5PEmbedCommunicator.send('prepareResize',
-                            {
-                                scrollHeight: iFrame.contentDocument.body.scrollHeight,
-                                clientHeight: iFrame.contentDocument.body.clientHeight
-                            }
-                        );
-                    } else {
-                        H5PEmbedCommunicator.send('hello');
-                    }
-                }, 0);
-            });
-
-            // Trigger initial resize for instance.
-            H5P.trigger(instance, 'resize');
+            setupEmbedCommunicator(iFrame, H5P);
         });
     });
+
+    var setupEmbedCommunicator = function (iFrame, H5P) {
+        var resizeDelay;
+
+        var instance = H5P.instances[0];
+        var parentIsFriendly = false;
+
+        // Handle that the resizer is loaded after the iframe.
+        H5PEmbedCommunicator.on('ready', function() {
+            H5PEmbedCommunicator.send('hello');
+        });
+
+        // Handle hello message from our parent window.
+        H5PEmbedCommunicator.on('hello', function() {
+            // Initial setup/handshake is done.
+            parentIsFriendly = true;
+
+            // Hide scrollbars for correct size.
+            iFrame.contentDocument.body.style.overflow = 'hidden';
+
+            document.body.classList.add('h5p-resizing');
+
+            // Content need to be resized to fit the new iframe size.
+            H5P.trigger(instance, 'resize');
+        });
+
+        // When resize has been prepared tell parent window to resize.
+        H5PEmbedCommunicator.on('resizePrepared', function() {
+            H5PEmbedCommunicator.send('resize', {
+                scrollHeight: iFrame.contentDocument.body.scrollHeight
+            });
+        });
+
+        H5PEmbedCommunicator.on('resize', function() {
+            H5P.trigger(instance, 'resize');
+        });
+
+        H5P.on(instance, 'resize', function() {
+            if (H5P.isFullscreen) {
+                return; // Skip iframe resize.
+            }
+
+            // Use a delay to make sure iframe is resized to the correct size.
+            clearTimeout(resizeDelay);
+            resizeDelay = setTimeout(function() {
+                // Only resize if the iframe can be resized.
+                if (parentIsFriendly) {
+                    H5PEmbedCommunicator.send('prepareResize',
+                        {
+                            scrollHeight: iFrame.contentDocument.body.scrollHeight,
+                            clientHeight: iFrame.contentDocument.body.clientHeight
+                        }
+                    );
+                } else {
+                    H5PEmbedCommunicator.send('hello');
+                }
+            }, 0);
+        });
+
+        // Trigger initial resize for instance.
+        H5P.trigger(instance, 'resize');
+    };
 
 });
