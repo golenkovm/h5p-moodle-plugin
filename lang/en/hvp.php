@@ -597,3 +597,55 @@ $string['emailaddressdescription'] = 'The email address will be used by H5P to r
 $string['copyrightwarning'] = 'Copyrighted material cannot be shared in the H5P Content Hub. If the content is licensed with a OER friendly license like Creative Commons, please choose the appropriate license. If not this content cannot be shared.';
 $string['keywordsexists'] = 'Keywords already exists!';
 $string['somekeywordsexists'] = 'Some of these keywords already exist';
+
+// CLI.
+$string['error:nolibraryexists'] = 'No existing libraries were found matching id or title provided.';
+$string['error:multiplelibrariesfound'] = 'Multiple libraries were found using provided filters. Try using an id.';
+$string['error:invalidversionformat'] = 'Version format is not valid. Must be \'major.minor.patches\'. E.g. \'2.4.1\'';
+$string['error:librarydependency'] = 'The library can\'t be deleted as it is a dependency for other libraries: {$a}';
+$string['cli:help'] = "Command line tool to uninstall h5p libraries. Provide either an id or, a title and version number of the library.
+
+Options:
+    -h --help                   Print this help.
+    --id                        ID of h5p library to be deleted.
+    --title                     Title of h5p library to be deleted (NOT machine_name).
+    --version                   Version of the h5p library in the form of 'major.minor.patch'. E.g. '2.4.1'.
+    -r --run                    Execute uninstall. If this option is not set, then the script will be run in a dry mode.
+
+Examples:
+
+    # php remove_library.php  --id=12
+        A dry run of removing library with id of 12
+
+    # php remove_library.php  --id=12 --run
+        Remove library with id of 12 and any associated activities
+
+    # php remove_library.php  --title='An h5p library' --version=1.0.0
+        A dry run of removing library with name of 'An h5p library 1.0.0'
+
+    # php remove_library.php  --title='An h5p library' --version=1.0.0 --run
+        Remove library with name of 'An h5p library 1.0.0' and any associated activities
+";
+$string['query:help'] = "<p>Script to uninstall h5p libraries. Provide either an id or, a title and version number of the library.</p>
+<p></p>
+<p>Options:</p>
+<p>    --help                   Print this help.</p>
+<p>    --id                     ID of h5p library to be deleted.</p>
+<p>    --title                  Title of h5p library to be deleted (NOT machine_name).</p>
+<p>    --version                Version of the h5p library in the form of 'major.minor.patch'. E.g. '2.4.1'.</p>
+<p>    --run                    Execute uninstall. If this option is not set, then the script will be run in a dry mode.</p></
+<p></p>
+<p>Examples:</p>
+<p></p>
+<p>    # /remove_library.php?id=12</p>
+<p>        A dry run of removing library with id of 12</p>
+<p></p>
+<p>    # /remove_library.php?id=12&run=true</p>
+<p>        Remove library with id of 12 and any associated activities</
+<p></p>
+<p>    # /remove_library.php?title=Test Library&version=1.0.0</p>
+<p>        A dry run of removing library with name of 'Test Library 1.0.0'</p>
+<p></p>
+<p>    # /remove_library.php?title=Test Library&version=1.0.0&run=true</
+<p>        Remove library with name of 'Test Library 1.0.0' and any associated activities</p>
+";
