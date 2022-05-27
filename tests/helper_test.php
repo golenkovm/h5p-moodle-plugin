@@ -30,11 +30,15 @@ use mod_hvp\helper;
  */
 class helper_test extends \advanced_testcase {
 
+    /** @var \component_generator_base|\default_block_generator $generator Plugin test generator. */
+    private $generator;
+
     /**
      * Runs before every test.
      */
     public function setUp(): void {
         $this->resetAfterTest();
+        $this->generator = $this->getDataGenerator()->get_plugin_generator('mod_hvp');
     }
 
     public function test_get_library_empty_options() {
@@ -50,7 +54,7 @@ class helper_test extends \advanced_testcase {
     }
 
     public function test_get_library_with_id_and_library_found() {
-        $library = $this->get_test_library();
+        $library = $this->generator->create_test_library();
         $actuallibrary = \mod_hvp\helper::get_library(['id' => $library->id]);
         $this->assertEquals($library->id, $actuallibrary->id);
         $this->assertEquals($library->machine_name, $actuallibrary->machine_name);
@@ -69,17 +73,17 @@ class helper_test extends \advanced_testcase {
     public function test_get_library_with_title_and_multiple_libraries_found() {
         $this->expectException(\moodle_exception::class);
         $this->expectExceptionMessage('Multiple libraries were found using provided filters. Try using an id.');
-        $library1 = $this->get_test_library([
+        $library1 = $this->generator->create_test_library([
             'machine_name' => 'test_library_one',
         ]);
-        $library2 = $this->get_test_library([
+        $library2 = $this->generator->create_test_library([
             'machine_name' => 'test_library_two',
         ]);
         \mod_hvp\helper::get_library(['title' => 'Test library', 'version' => '1.2.3']);
     }
 
     public function test_get_library_with_title_and_library_found() {
-        $library = $this->get_test_library([
+        $library = $this->generator->create_test_library([
             'title' => 'Test library',
             'major_version' => '1',
             'minor_version' => '2',
@@ -103,17 +107,17 @@ class helper_test extends \advanced_testcase {
     }
 
     public function test_get_dependant_libraries_with_no_results() {
-        $library = $this->get_test_library();
+        $library = $this->generator->create_test_library();
         $titles = \mod_hvp\helper::get_dependant_libraries((object) ['id' => $library->id]);
         $this->assertEmpty($titles);
     }
 
     public function test_get_dependant_libraries_with_results() {
-        $library = $this->get_test_library();
+        $library = $this->generator->create_test_library();
         $dependents = [
-            $this->get_test_library(['machine_name' => 'preloaded_dependant_one']),
-            $this->get_test_library(['machine_name' => 'preloaded_dependant_two']),
-            $this->get_test_library(['machine_name' => 'preloaded_dependant_three']),
+            $this->generator->create_test_library(['machine_name' => 'preloaded_dependant_one']),
+            $this->generator->create_test_library(['machine_name' => 'preloaded_dependant_two']),
+            $this->generator->create_test_library(['machine_name' => 'preloaded_dependant_three']),
         ];
         $librarydependency = $this->convert_record_to_dependency_format($library);
         foreach ($dependents as $dependent) {
@@ -124,12 +128,12 @@ class helper_test extends \advanced_testcase {
     }
 
     public function test_remove_dependant_activities_with_no_activities() {
-        $library = $this->get_test_library();
+        $library = $this->generator->create_test_library();
         $this->assertEquals(0, helper::remove_dependant_activities($library));
     }
 
     public function test_remove_dependant_activities_with_activities_and_dryrun() {
-        $library = $this->get_test_library();
+        $library = $this->generator->create_test_library();
         $course = $this->getDataGenerator()->create_course();
         $hvp1 = $this->getDataGenerator()->get_plugin_generator('mod_hvp')->create_instance([
             'course' => $course->id,
@@ -143,7 +147,7 @@ class helper_test extends \advanced_testcase {
     }
 
     public function test_remove_dependant_activities_with_activities() {
-        $library = $this->get_test_library();
+        $library = $this->generator->create_test_library();
         $course = $this->getDataGenerator()->create_course();
         $hvp1 = $this->getDataGenerator()->get_plugin_generator('mod_hvp')->create_instance([
             'course' => $course->id,

@@ -61,6 +61,7 @@ class mod_hvp_generator extends testing_module_generator {
             'h5paction' => 'create',
             'metadata' => '',
             'params' => '',
+            'main_library_id' => 0,
         );
 
         foreach ($defaultsettings as $name => $value) {
@@ -72,10 +73,48 @@ class mod_hvp_generator extends testing_module_generator {
         // Check that the library exists.
         $library = $DB->get_record('hvp_libraries', ['id' => $record->main_library_id]);
         if ($library === false) {
-            throw new coding_exception('A valid hvp library id must be provided to create a new hvp activity.');
+            // Create a new test library to use.
+            $library = $this->create_test_library(['machine_name' => 'test_library_' . rand(1, 9999)]);
         }
         $record->h5plibrary = $library->machine_name . ' ' . $library->major_version . '.' . $library->minor_version;
 
         return parent::create_instance($record, (array)$options);
+    }
+
+    /**
+     * Create a test library.
+     *
+     * @param array $options Use to override default test library data.
+     * @return \stdClass
+     */
+    public function create_test_library(array $options = []): \stdClass {
+        global $DB;
+        $defaults = [
+            'machine_name' => 'test_library',
+            'title' => 'Test library',
+            'major_version' => '1',
+            'minor_version' => '2',
+            'patch_version' => '3',
+            'runnable' => '1',
+            'preloaded_js' => '',
+            'preloaded_css' => '',
+            'drop_library_css' => '',
+            'semantics' => '',
+            'tutorial_url' => 'https://tutorialurl.example.com',
+            'add_to' => '',
+            'metadata_settings' => '',
+        ];
+
+        // If the library exists matching id, just return the existing library.
+        if (!empty($options['id'])) {
+            $library = $DB->get_record('hvp_libraries', ['id' => $options['id']]);
+            if (!empty($library)) {
+                return $library;
+            }
+        }
+
+        $params = array_merge($defaults, $options);
+        $libraryid = $DB->insert_record('hvp_libraries', (object) $params);
+        return $DB->get_record('hvp_libraries', ['id' => $libraryid]);
     }
 }
