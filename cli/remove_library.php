@@ -38,9 +38,11 @@ list($options, $unrecognised) = cli_get_params([
     'title' => '',
     'version' => '',
     'run' => false,
+    'force' => false,
 ], [
     'h' => 'help',
     'r' => 'run',
+    'f' => 'force',
 ]);
 
 if ($unrecognised) {
@@ -64,8 +66,9 @@ try {
 
 // 1. Check if there is any dependency on the lib about to be deleted and stop process with message if one is found.
 $dependantlibraries = \mod_hvp\helper::get_dependant_libraries($library);
-if (!empty($dependantlibraries)) {
-    cli_error('The library can\'t be deleted as it is a dependency for other libraries: ' . implode(',', $dependantlibraries));
+if (!empty($dependantlibraries) && empty($options['force'])) {
+    cli_error('The library can\'t be deleted as it is a dependency for other libraries: ' . implode(',', $dependantlibraries)
+            . ' Use --force to delete the library, leaving orphaned dependencies that may break the library tree.');
 } else {
     cli_writeln("Library '{$library->title} {$library->major_version}.{$library->minor_version}.{$library->patch_version}' can be deleted.");
 }
@@ -74,8 +77,11 @@ if (!empty($dependantlibraries)) {
 try {
     $countactivities = \mod_hvp\helper::remove_dependant_activities($library, !$options['run']);
 } catch (moodle_exception $e) {
-    cli_writeln('The library can\'t be deleted as some activities couldn\'t be deleted');
-    cli_error($e->getMessage());
+    if (!empty($options['force'])) {
+        cli_writeln('The library can\'t be deleted as some activities couldn\'t be deleted');
+        cli_error($e->getMessage());
+    }
+    cli_writeln('Some activities couldn\'t be deleted');
 }
 $message = $options['run'] ? $countactivities . ' activities successfully deleted.' : $countactivities . ' activities to be deleted.';
 cli_writeln($message);
